@@ -1,0 +1,124 @@
+Grid world: we don't really know the outcome of an action.
+Big reward comes in the end (exit).
+
+Maximize sum of rewards.
+Transitions T(s,a,s') == P(s'|s,a)
+Rewards R(s,a,s') and discount gamma //instantaneous
+Start state s0
+
+Quantities:
+Policy: map of states to actions
+Utility: sum of discounted rewards
+Values: expected future utility from a state (max node) //cummulative
+Q-Values: expected future utility from a q-state (chance node). Valus partitioned to each action.
+
+BELLMAN EQUATIONS
+How to be optimal
+1. Take correct first action
+2. Keep being optimal(recursive)
+
+Definition of optimal utility via expectimax recurrence gives a simple one-step lookahead relationship amongst optimal utility values
+Vstar(s) = max(Qstar(s,a)) for all a
+Qstar(s,a) = sum( T(s,a,s') * (R(s,a,s') + Vstar(s')*gamma) ) foor all s'
+Vstar(s) = max(sum(Tstar(s,a,s')*(R(s,a,s') + gamma*Vstar(s')))) for all s' for all a
+
+VALUE ITERATION
+Bellman equations characterize the optimal values.
+Value iteration computes them.
+V(k+1)(s) = max( sum(T(s,a,s') *(R(s,a,s') + gamma*Vk(s'))) for all s ) for all a
+Value iteration for zero iteration is zero.
+
+POLICY EVALUATION
+Got policy in hand. Suboptimal, how good is it?
+Expectimax trees max over all actions to compute the optimal values.
+Do what pi tells. Simplified. Only one action per state. Though the tree's value would depend on which policy we fixed
+
+UTILITIES FOR A FIXED POLICY
+Another basic operation:
+compute the utility of a state under a fixed policy (pi)
+Defile utility of a state s, under a fixed policy pi.
+Vpi(s) 	= expected total discounted rewards starting in s and following pi
+		= sum( T(s,pi(s),s') * (R(s,pi(s),s') + gamma*V(s'))) for all s'
+Same as bellman equation but not the max for all actions a is gone.
+
+POLICY EVALUATION
+How to calculate the V's for a fixed pi? (DYNAMIC PROGRAMMING)
+1. 	Turn recursive bellman equations into updates (like value iteration)
+	V0(pi) (s) = 0
+	V(k+1)(pi) (s) = sum( T(s,pi(s),s') * (R(s,pi(s),s') + gamma*V(s'))) for all s'
+	
+	O(s^2) per iteration for s number of states.
+2.	W/o the maxes, this is now just a lin sys eq.
+	i.e. solve w/ matlab or your favourite linear system solver.
+
+COMPUTING ACTIONS FROM VALUES
+Let's image we have the optimal values Vstar(s)
+How should we choose as the action? You can't just look into the values then choose the action.
+How should we act then?
+Gotta do mini-expectimax for optimal policy.
+pistar(s) 	= average over all s primes then take the argmax.
+			= argmax( sum( T(s,a,s') * (R(s,a,s') + Vstar(s')*gamma) ) foor all s' ) for all a.
+This is called policy extraction.
+
+COMPUTING ACTIONS FROM Q-VALUES
+Let's image we have the optimal q-values.
+How should we act?
+Completely trivial to decide
+pistar(s) = argmax(Qstar(s,a)) for all actions
+
+REMARK: EASIER TO CHOOSE ACTION/POLICY ON Q-VALUES THAN ON VALUES.
+
+POLICY ITERATION
+Got policy in front, want to make it better constantly
+Value iteration repeats the Bellman updates.
+Problem:
+1. 	slow, O(s^2 * a) per iteration because considers all action
+2. 	The action doesn't change. The "max" at each state rarely changes.
+3. 	The policy often converges long before the values.
+
+Alternative approach. Still optimal, can converge much faster under some conditions.
+1. 	Policy evaluation
+	calculate utilities for some fixed policy (not optimal utilities) until convergence.
+2.	Policy improvement.
+	update policy using one-step look-ahead with resulting converged (but not optimal) utilities as future values
+Repeat until policy converges
+
+Evaluation: for fixed pi, find values w/ policy evaluation.
+-	Iterate until values converge.
+	V(k+1)(pi) (s) = sum( T(s,pi(s),s') * (R(s,pi(s),s') + gamma*V(s'))) for all s'
+
+Improvement: for fixed values, get better policy using policy extraction
+-	One step lookahead.
+	pi(i+1) (s) = argmax( sum( T(s,a,s') * (R(s,a,s') + V(pi(i) )(s')*gamma)) for all s') for all a
+
+COMPARISON
+Both value iteration and policy iteration compute same thing (all optimal values)
+Value Iteration:
+-	Every iteration updates both values and policy
+-	Don't track policy, but taking the max over actions implicitly recomputes it.
+Policy Iteration:
+-	We do several passes that update utilities w/ fixed policy (each pass is fast bcs we consider only one action, not all)
+-	After policy is evaluated, a new policy is chosen (slow like a value iteration pass)
+-	The new policy will be better (or we're done)
+
+Both are dynamic programs for solving MDPs.
+
+Value iteration/policy iteration: compute optimal values
+Policy evaluation: compute values for a particular policy
+Policy extraction: turn values => policy
+
+DOUBLE BANDIT MARKOV DECISION PROCESS
+Double slot machine.
+Blue == $1
+Red == $2 or $0
+Offline vs online planning.
+Offline == know probabilities
+Online == dont know
+
+LEARNING
+Can't solve with pure information
+Exploration
+Exploitation
+Regret
+Sampling
+Difficulty

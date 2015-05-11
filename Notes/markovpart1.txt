@@ -1,0 +1,108 @@
+MARKOV DECISION PROCESS
+Transition function T(s,a,s')
+The probability ending in s' from s taking action a.
+Also called the model or the dynamics.
+Reward R(s,a,s'), sometimes R(s) or R(s')
+MDP are non-deterministic search problems. Actions can have multiple outcomes. Can solve with expectimax search. Will have new tool soon.
+
+Andrey Markov.
+"Markov" generally means that given present state, the future and the past are independent.
+For MDP, "Markov" means action outcomes depend only on current state.
+Just like search.
+
+POLICIES.
+Optimal plan like in deterministic search cant work here. Dont know what sequence of action to take. Instead of plan, it's policy. Policy pi gives an action for each state. Optimal policy is one that maximizs the expected utility if followed. Explicit policy defines a reflex agent. Expectimax didn't compute entire policies. It computed the action for a single state only.
+
+e.g. RACING
+three states: cool,warm,overheat
+two actions: slow,fast.
+cool state: if slow => cool. if fast, 1/2 warm 1/2 cool.
+warm state: if slow => 1/2 cool 1/2 warm. if fast => overheat.
+Going faster gets double reward (+2).
+
+SEARCH TREE
+Each MDP state projects an expectimax like search tree.
+q-state => commitment to an action. (CIRCLE)
+
+UTILITIES OF SEQUENCES
+what prefs should an agent have over reward sequences?
+More or less? Now or later?
+Reasonable to maximize sum of rewards.
+Reasonable to prefer now.
+There is gamma to the power of of days. (exponential decay)
+
+DISCOUNTING
+Each time descend a level, we multiply the discount once.
+Why? We like sooner than later. Also help algorithm converge.
+e.g.
+U([1,2,3]) = 1*1 + 0.5*2 + 0.25*3;
+even if their sum is the same, U[3,2,1]) is more preferrable.
+
+STATIONARY PREFERENCES
+THEOREM: if we assume stationary preferences:
+[a1,a2,..] > [b1,b2,..] <=> [r,a1,a2,..] > [r,b1,b2,..]
+Then two ways to define utility: additive or discounted.
+
+INFINITE UTILITIES
+What if game lasts forever? Do we get infinite rewards?
+Solutions:
+FINITE HORIZON: (Depth limited search similarity)
+Terminate episodes after fixed T steps
+DISCOUNTING: We care about achieving rewards as soon as possible.
+ABSORBING STATE: guarantee that for every policy, a terminal state will eventually be reached (like "overheated" for racing)
+
+DEFINING MDPs
+GIVEN: set of states S, start state s0, set of actions A, transitions T(s,a,s') or P(s'|s,a) , rewards R(s,a,s') (and discount gamma)
+MDP QUANTITIES:
+Policy == choice of action for each state
+Utility == sum of (discounted) rewards
+
+OPTIMAL QUANTITIES
+V*(s) = expected utility starting in s and acting optimally
+Q*(s,a) = expected utility starting out having taken action a from state s and acting optimally.
+Policies:
+pi*(s) = optimal action from state s
+
+VALUES OF STATES
+compute expectimax value of a state
+Vstar(s) = max(Qstar(s,a)) for all a
+Qstar(s) = sum(Tstar(s,a,s') * (R(s,a,s') + gamma*V*(s')) ) for all s'
+Vstar(s) = max(sum(Tstar(s,a,s')*(R(s,a,s') + gamma*Vstar(s')))) for all s' for all a
+
+SEARCH TREE
+We're doing too much work with expectimax
+Problem:
+1. repeated states. => only compute once
+2. tree goes on forever. => depth limited.
+
+TIME LIMITED VALUES
+There is a stopwatch. Define Vk(s) to be the optimal value of s if the game ends in k more time steps. Timesteps == reward
+Vk(s) == depth-k expectimax.
+truncation.
+
+VALUE ITERATION (BOTTOM UP DP)
+For all states:
+1. Start with V0(s) = 0.
+2. Given vector Vk(s) values, do one ply of expectimax from each state.
+V(k+1)(s) = max( sum(T(s,a,s') *(R(s,a,s') + gamma*Vk(s'))) for all s ) for all a
+3. Repeat until convergence
+COMPLEXITY = O(S^2 * A)
+THEOREM: will converge to unique optimal values.
+
+ 
+QUIZ 4:
+Let gamma = 0.2
+For state a..
+V0(a) = 0
+V1(a) = 10
+For state b..
+V1(b) = 0
+V2(b) = (10*0.2)
+For state c..
+V1..2(c) = 0
+V3(c) = (10*0.2^2)
+For state d..
+V1(d) = 0
+V2(d) = 0.2
+For state e..
+V1(e) = 1

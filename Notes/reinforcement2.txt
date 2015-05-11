@@ -1,0 +1,96 @@
+RL: using sample instead of known probability.
+
+MODEL-FREE LEARNING
+-	temporal difference learning
+-	experience world through episodes (s,a,r,s',a',r',...)
+-	Update estimates each transition (s,a,r,s')
+-	Over time, updates will mimic Bellman updates
+
+Q-LEARNING
+we're insterested in the evaluating actions, instead of evaluating values. i.e. Q instead of V.
+Qk+1(s,a) = sum(T(s,a,s') * (R(s,a,s') + gamma* max(Qk(s',a')) for all a')) for all s'
+Can't compute this update w/o know T,R
+Instead, compute avg as we go.
+-	Receive a sample transition (s,a,r,s')
+-	This sample suggests Q(s,a) = r + gamma* max(Q(s',a')) for all a'
+-	But we want to avg over results from (s,a)
+-	So keep a running avg. Q(s,a) = (1-alpha)*Q(s,a) + (alpha)*(r + gamma* max(Q(s',a')) for all a')
+-	Q-learning is amazing because you learn optimal policy even if you don't follow it, even if you're messing up left and right.
+-	Off-policy learning
+-	Have to explore enough, have to eventually make learning rate small enough, but not decrease it too quickly.
+
+EXPLORATION VS EXPLOITATION
+
+HOW TO EXPLORE?
+epsilon-greedy policy:
+-	At every time step, with some presumably small prob (eps), act randomly.
+-	At high prob (1-eps), act on current policy.
+-	PROB: thrashing
+	-	Lower eps over time
+	-	exploration functions
+
+WHEN TO EXPLORE?
+-	Random actions: explore a fixed amount
+-	Better idea: explore areas whose badness is not (yet) established, eventually stop exploring.
+
+EXPLORATION FUNCTION
+-	Takes value estimate u and a visit count n, and returns an optimistic utility, e.g. f(u,n) = u + k/n.
+-	Regular Q-Update: Q(s,a) = r + gamma* max(Q(s',a')) for all a'
+-	Modified Q-update: Q(s,a) = r + gamma* max(f(Q(s',a'), N(s',a'))) for all a'
+-	This propagates the "bonus" back to states that lead to unknown states as well!
+
+REGRET
+-	even though you learn optimal policy, because T is unknown, mistakes are inevitable.
+-	reget == measure of total mistake cost: diff between your (expected) rewards, including youthful subiotimality, and optimal (expected) rewards.
+-	Minimizing regret goes beyond learning to be optimal - it requires optimally learning to be optimal.
+-	e.g. random exploration and exploration functions both end up optimal, but random exploration has higher regret.
+
+
+GENERALIZE ACROSS STATES
+-	Basic Q-learning keeps a table of all q-values
+-	In realistic situations, we cannot possibly learn about every single state!
+	-	Too many states to visit them all in training
+	-	Too many states to hold the q-tables in memory
+-	Instead we want to generalize:
+	-	Learn about some small number of training states from exp
+	-	Generalize that experience to new, similar situations
+	-	This is fundamental idea in machine learning, and we'll see it over and over again.
+
+FEATURE-BASED REPRESENTATIONS
+-	Solution: describe a state using vector of features (properties)
+	-	Features are functions from states to Real that capture important props of the state.
+	-	E.g.: distance to closest ghost, distance to closest dot.
+	-	Can also describe q-state(s,a) w/ features (e.g. action moves closer to food)
+
+LINEAR VALUE FUNCTIONS
+-	Using a feature representation, we can write a q function (or value function) for any state using a few weights:
+	V(s) = sum( wi* fi(s) ) for all iE[1,n]
+	Q(s,a) = sum( wi* fi(s,a) ) for all iE[1,n]
++	Our experience is summed up in a few powerful numbers
+-	States may share features but actually be very different in value!
+
+APPROXIMATE Q-LEARNING
+Q(s,a) = sum( wi* fi(s,a) ) for all iE[1,n]
+-	Q-learning w/ linear Q-functions
+	transition  = (s,a,r,s')
+	difference = [(r + gamma* max(Q(s',a')) for all a' ] - Q(s,a)
+	Q(s,a)  = Q(s,a)  + alpha[difference]   -- exact Q's
+	wi = wi + alpha*[difference]*fi(s,a)    -- approximate Q's
+-	Intuitinve interpretation:
+	-	Adjust weights of active features
+	-	e.g. if something unexpectedly bad happens, blame the features that were on: disprefer all states w/ that state's features.
+
+Q-PACMAN
+Q(s,a) = 4.0 * fdot(s,a)  - 1.0*fgst(s,a)
+
+LINEAR APPROXIMATION: REGRESSION
+-	prediction: y = w0 + w1*f1(x)
+-	total error: sum(yi - Yi)^2 for all i.
+-	minimizing error:
+	error(w) = 0.5 * (y - sum(wk*fk(x)) for all k)^2
+	error(w)wm = -(y-sum(wk*fk(x)) * fm(x)
+	wm  =  wm+alpha*(y-sum(wk*fk(x)) * fm(x)
+	
+	Approximate q update explained:
+	wm  =  wm+alpha*(r + gamma*max(Q(s',a')) - Q(s,a)) * fm(s,a)
+

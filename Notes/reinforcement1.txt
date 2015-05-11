@@ -1,0 +1,151 @@
+REINFORCEMENT LEARNING
+Uncertainty.Receive feedback in form of rewards.
+Agent's utility is defined by reward function.
+Maximize expected rewards. Learn from observed samples of outcomes.
+
+ASSUME MDP.
+-	set of states sES
+-	set of actions (per state) A
+-	model T(s,a,s')
+-	reward function R(s,a,s')
+Still looking for policy pi(s)
+New twist: don't know T or R.
+Don't know which states are good or what the actions do.
+Must actually try actions and states out to learn.
+
+OFFLINE(MDP) VS ONLINE(REINFORCEMENT LEARNING)
+offline == know what actions will do. think about consequences.
+online == have to jump to pit to know that it's bad.
+
+
+MODEL-BASED LEARNING
+Reduce RL to MDP. Approximate model based on experiences, solve for values as if the learned model was correct.
+1.	Learn empirical MDP model.
+	Count outcomes s' for each s, a.
+	Normalize to give an estimate of T(s,a,s')
+	Discover each R(s,a,s') when we experience (s,a,s')
+2.	Solve the learned MDP
+	e.g. use value iteration as before.
+Not necessarily needs to be correct MDP.
+
+Known P(a)	: E[A] = sum of (P(a) * a) for all a
+Model based
+Unknown P(A): P(a) = num(a)/N
+			  E[a] = sum of (P(a) * a) for all a
+Model Free
+Unknown P(A): E[A] = 1/N * sum(ai) for all i
+
+
+PASSIVE RL (NOT OFFLINE PLANNING)
+Have to learn the samples, but don't control the actions.
+Watch/monitor things happen. Try to figure out value for fixed policy pi(s). (Policy evaluation)
+Don't know T and R, want to know / learn the state values.
+
+DIRECT EVALUATION
+Watch action unfold, act according to pi, everytime visit a state write down what the sum of discounted rewards turned out to be. Average them.
++ Easy to understand
++ Doesn't require knowledge of T,R
++ Eventually correct
+- Wastes info about state connections
+- Learned separately
+- Long time to learn
+
+WHY NOT USE POLICY EVALUATION?
+Simplified Bellman updates calculate V for fixed policy:
+Each round, replace V w/ one step look ahead layer over V. (average)
+Fully exploits the connections between states
+But we're missing T and R.
+How to take weighted average w/o knowing the weights?
+
+SAMPLE-BASED POLICY EVALUATION?
+We want to improve estimate of V by computing averages.
+Idea: take samples of outcomes s' (by doing action) and average
+sample1 = R(s,pi(s),s1') + gamma * Vkpi (s1');
+...
+samplen = R(s,pi(s),sn') + gamma * Vkpi (sn');
+Vk+1pi(s) = 1/n * sum(samplei) for all i
+
+TEMPORAL DIFFERENCE LEARNING
+Big idea: learn from every experience.
+update V(s) each time we experience a transition (s,a,s',r)
+We compare current estimate w/ what we see.
+Likely outcomes s' will contribute updates more often
+Temporal diff learning of values
+-	Policy still fixed, still doing eval
+-	Move values towardvalue of whatever successor occurs: running avg.
+Sample of V(s): sample = R(s,pi(s),s') + gamma*Vpi(s')
+Update to V(s): Vpi(s) = (1-alpha) * Vpi(s) + (alpha) * sample;
+Sample		  : Vpi(s) = Vpi(s) + alpha*(sample - Vpi(s))
+alpha as error..
+
+EXPONENTIAL MOVING AVG
+The running interpolation update xn = (1-alpha)*xn-1 + alpha*xn
+Makes recent samples more important:
+xn = (xn + (1-alpha)* xn-1 + (1-alpha)^2 *xn-2 + ..)/(1 + (1-alpha) + (1-alpha)^2 + ..)
+Forgets about the past (distant past values were wrong anyway)
+Decreasing learning rate(alpha) can give avg.
+
+PROBLEMS W/ TD VALUE LEARNING
+TD Value learning is model free way to do policy evaluation mimicking bellman updates w/ running sample avgs.
+However, if we want to turn values into policy, we're sunk:
+pi(s)  = argmax(Q(s,a)) for all a
+Q(s,a) = sum(T(s,a,s') * (R(s,a,s') + gamma*V(s'))) for all s'
+IDEA: learn Q-values, not values
+Makes action selection model-free too!
+
+DIRECT EVALUATION VS TEMPORAL DIFFERENCE
+DE accepts all as average.
+TD updates and ignores past datas.
+
+ACTIVE REINFORCEMENT LEARNING
+Full RL: optimal policies (like value iteration):
+-	dont know T, R
+-	choose actions
+-	produce optimal policy/values
+In this case:
+-	Learner makes choices
+-	Fundamental tradeoff: exploration vs exploitation
+-	Not offline planning
+
+Q-LEARNING
+Converge at optimal value. Can't do this w/ samples.
+Samples are average, while Q-Value is a max.
+But Q-values are more useful, so compute them instead
+-	Start w/ Q0(s,a) = 0 ,whcih we know is right
+-	Given Qk:
+	Qk+1(s,a) = sum(T(s,a,s') * (R(s,a,s') * gamma*max(Qk(s',a')) for all a')) for all s'
+-	Learn Q(s,a) values as you go: receive a sample (s,a,s',r)
+-	Consider your old estimate: Q(s,a)
+-	Consider your new sample estimate:
+	[sample] = R(s,a,s') + gamma*max(Q(s',a')) for all a'
+-	Incorporate the new estimate into a running average:
+	Q(s,a) = (1-alpha) * Q(s,a) + (alpha) * [sample]
+if one a'1 is bad and a'2 is good, a will have good value because it will look only at max value.
+
+Q-LEARNING PROPERTIES
+-	converges to optimal policy -- even if you're acting suboptimally
+-	off-policy learning
+-	Caveats:
+	-	Have to explore enough
+	-	Have to eventually make the learning rate small enough
+	-	.. but not decrease it too quickly
+	-	basically, in the limit, it doesn't matter how you select actions(!)
+
+POLICY SEARCH
+-	Directly want to improve policy
+-	Problem: often feature based policies that work well aren't the ones that approx. V/Q best
+	-	e.g. your value functions from project 2 were probably horrible estimates of future rewards, but they still produced good decisions.
+	-	Q-learning's priority: get Q-value close(modelling)
+	-	Action selection priority: get ordering of Q-values right (prediction)
+	-	We'll see distinction between modeling and prediction again later in the course
+-	Solution: learn policies that max rewards, not the values that predict them.
+-	Policy search: start w/ an ok solution (e.g. Q-learning) then fine-tune by hill climbing on feature weights.
+
+SIMPLE POLICY SEARCH:
+-	Start w/ an initial linear value function or Q-function
+-	Nudge each feature weight up and down & see if your policy is better than before.
+PROBS:
+-	How tell policy got better?
+-	Need to run many sample episodes!
+-	if there are a lot of features => impractical.
+Better methods exploit lookahead structure, sample wisely, change multiple parameters..
